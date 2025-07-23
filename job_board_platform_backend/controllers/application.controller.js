@@ -1,4 +1,5 @@
 import ApplicationModel from "../models/Application.model.js";
+import JobModel from "../models/Job.model.js"
 
 const applyForJob = async (req, res) => {
     try {
@@ -48,27 +49,27 @@ const updateApplicationStatus = async (req, res) => {
     const { applicationId } = req.params;
     const { status } = req.body;
 
-    // Find application and populate the job field
     const application = await ApplicationModel.findById(applicationId).populate('job');
 
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }
 
-    // Check if the employer updating the application owns the job
     if (application.job.postedBy.toString() !== req.user.userId) {
       return res.status(403).json({ message: 'Not authorized to update this application' });
     }
 
-    // Update the application status
     application.status = status;
     await application.save();
 
     res.status(200).json(application);
   } catch (error) {
+    console.error('Error in updateApplicationStatus:', error); // <--- Add this
     res.status(500).json({ message: 'Error updating application status', error: error.message });
   }
 };
+
+
 const deleteApplication = async (req, res) => {
     try {
         const { applicationId } = req.params;
@@ -85,4 +86,30 @@ const deleteApplication = async (req, res) => {
     }
 };
 
-export { applyForJob, getApplications, updateApplicationStatus, deleteApplication };
+const getApplicationsForEmployer = async (req, res) => {
+  try {
+    const employerId = req.user.userId;
+
+    // Step 1: Find all jobs posted by this employer
+    const employerJobs = await JobModel.find({ postedBy: employerId }).select('_id');
+
+    const jobIds = employerJobs.map(job => job._id);
+
+    // Step 2: Find all applications for those jobs
+    const applications = await ApplicationModel.find({ job: { $in: jobIds } })
+      .populate('job', 'title location type') // Populate only necessary job fields
+      .populate('JobSeeker', 'fullName email') // Populate job seeker fields
+      .exec();
+
+    res.status(200).json(applications);
+  } catch (error) {
+    console.error('Error fetching employer applications:', error);
+    res.status(500).json({
+      message: 'Error fetching employer applications',
+      error: error.message,
+    });
+  }
+};
+
+
+export { applyForJob, getApplications, updateApplicationStatus, deleteApplication, getApplicationsForEmployer };

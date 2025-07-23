@@ -1,4 +1,4 @@
-import JobModel from '../models/job.model.js';
+import JobModel from '../models/Job.model.js';
 
 
 const postJob = async (req, res) => {
@@ -80,5 +80,20 @@ const deleteJob = async (req, res) => {
     }
 };  
 
+const getJobById = async (req, res) => {
+  try {
+    const { jobId } = req.params;
 
-export {postJob, getJobs, updateJobs, deleteJob};
+    const job = await JobModel.findById(jobId);
+
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    res.status(200).json(job);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching job', error: error.message });
+  }
+};
+
+export {postJob, getJobs, updateJobs, deleteJob, getJobById};
