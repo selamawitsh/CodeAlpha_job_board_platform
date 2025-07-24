@@ -3,21 +3,12 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api.js";
 
 export default function RegisterForm({ role }) {
-  const navigate = useNavigate(); 
-
-  const [form, setForm] = useState({
-    companyName: "",
-    fullName: "",
-    email: "",
-    password: "",
-  });
-
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ companyName: "", fullName: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,12 +17,8 @@ export default function RegisterForm({ role }) {
 
     const isEmployer = role === "employer";
     const nameField = isEmployer ? "companyName" : "fullName";
+    const url = isEmployer ? "/auth/register-employer" : "/auth/register-job-seeker";
 
-    const url = isEmployer
-      ? "/auth/register-employer"
-      : "/auth/register-job-seeker";
-
-    // Validation
     if (!form[nameField] || !form.email || !form.password) {
       setError("All fields are required.");
       return;
@@ -48,43 +35,29 @@ export default function RegisterForm({ role }) {
     }
 
     try {
-      const dataToSend = {
+      const response = await API.post(url, {
         email: form.email,
         password: form.password,
         [nameField]: form[nameField],
-      };
-
-      const response = await API.post(url, dataToSend);
+      });
 
       if (response.data.success) {
         setMessage("Registration successful! Redirecting to login...");
-
-        setForm({
-          companyName: "",
-          fullName: "",
-          email: "",
-          password: "",
-        });
-
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+        setForm({ companyName: "", fullName: "", email: "", password: "" });
+        setTimeout(() => navigate("/login"), 2000);
       } else {
         setError(response.data.message || "Registration failed.");
       }
-
     } catch (err) {
-        console.error("Registration error:", err.response || err);
-        setError(
-          err.response?.data?.message || "Registration failed. Please try again."
-      );
-}
-
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} autoComplete="off">
-      <h3>Register as {role === "employer" ? "Employer" : "Job Seeker"}</h3>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <h2 className="text-xl font-bold text-gray-800 text-center">
+        Register as {role === "employer" ? "Employer" : "Job Seeker"}
+      </h2>
 
       <input
         name={role === "employer" ? "companyName" : "fullName"}
@@ -92,6 +65,7 @@ export default function RegisterForm({ role }) {
         value={role === "employer" ? form.companyName : form.fullName}
         onChange={handleChange}
         required
+        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
       />
 
       <input
@@ -101,6 +75,7 @@ export default function RegisterForm({ role }) {
         value={form.email}
         onChange={handleChange}
         required
+        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
       />
 
       <input
@@ -110,13 +85,18 @@ export default function RegisterForm({ role }) {
         value={form.password}
         onChange={handleChange}
         required
-        minLength={6}
+        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
       />
 
-      {error && <div style={{ color: "red" }}>{error}</div>}
-      {message && <div style={{ color: "green" }}>{message}</div>}
+      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {message && <p className="text-green-600 text-sm">{message}</p>}
 
-      <button type="submit">Register</button>
+      <button
+        type="submit"
+        className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded shadow-md"
+      >
+        Register
+      </button>
     </form>
   );
 }

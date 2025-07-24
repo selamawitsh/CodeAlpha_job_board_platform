@@ -35,8 +35,15 @@ const getApplications = async (req, res) => {
         const jobSeekerId = req.user.userId;
 
         const applications = await ApplicationModel.find({ JobSeeker: jobSeekerId })
-            .populate('job', 'title companyName')
+            .populate({
+              path: 'job',
+              populate: {
+                path: 'postedBy',  
+                select: 'companyName' 
+              }
+            })
             .exec();
+
 
         res.status(200).json(applications);
     } catch (error) {

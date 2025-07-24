@@ -4,19 +4,11 @@ import { useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
   const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-    role: "jobseeker", // must send this
-  });
-
+  const [form, setForm] = useState({ email: "", password: "", role: "jobseeker" });
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,34 +29,22 @@ export default function LoginForm() {
 
     try {
       const res = await API.post("/auth/login", { email, password, role });
-
       const { token } = res.data;
 
-      // Save user data (token + role)
-      const user = { email, role, token };
-      localStorage.setItem("user", JSON.stringify(user));
-
+      localStorage.setItem("user", JSON.stringify({ email, role, token }));
       setMessage("Login successful!");
 
-      // Redirect based on role
-      if (role === "employer") {
-        navigate("/employer/manage-jobs");
-      } else {
-        navigate("/jobs");
-      }
-
+      setTimeout(() => {
+        navigate(role === "employer" ? "/employer/manage-jobs" : "/jobs");
+      }, 1500);
     } catch (err) {
-      console.error("Login error:", err.response?.data || err);
-      setError(
-        err.response?.data?.message ||
-        "Login failed. Please check your credentials."
-      );
+      setError(err.response?.data?.message || "Login failed. Please check your credentials.");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} autoComplete="off">
-      <h3>Login</h3>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <h2 className="text-xl font-bold text-gray-800 text-center">Login</h2>
 
       <input
         name="email"
@@ -73,6 +53,7 @@ export default function LoginForm() {
         value={form.email}
         onChange={handleChange}
         required
+        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
       />
 
       <input
@@ -82,22 +63,28 @@ export default function LoginForm() {
         value={form.password}
         onChange={handleChange}
         required
+        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
       />
 
       <select
         name="role"
         value={form.role}
         onChange={handleChange}
-        required
+        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
       >
         <option value="jobseeker">Job Seeker</option>
         <option value="employer">Employer</option>
       </select>
 
-      {error && <div style={{ color: "red" }}>{error}</div>}
-      {message && <div style={{ color: "green" }}>{message}</div>}
+      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {message && <p className="text-green-600 text-sm">{message}</p>}
 
-      <button type="submit">Login</button>
+      <button
+        type="submit"
+        className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded shadow-md"
+      >
+        Login
+      </button>
     </form>
   );
 }

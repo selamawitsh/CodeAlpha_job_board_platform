@@ -5,17 +5,15 @@ import JobForm from '../components/JobForm.jsx';
 export default function ManageJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingJob, setEditingJob] = useState(null); 
+  const [editingJob, setEditingJob] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
 
-
-  // Fetch employer's jobs
   const fetchEmployerJobs = async () => {
     try {
       const token = localStorage.getItem('token');
       const res = await API.get('/jobs/jobs', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setJobs(res.data);
     } catch (error) {
@@ -34,7 +32,7 @@ export default function ManageJobs() {
     try {
       const token = localStorage.getItem('token');
       await API.delete(`/jobs/delete-job/${jobId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setJobs(jobs.filter(job => job._id !== jobId));
     } catch (error) {
@@ -69,40 +67,71 @@ export default function ManageJobs() {
     handleFormClose();
   };
 
-  if (loading) return <p>Loading jobs...</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <p className="text-lg">Loading jobs...</p>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h2>Manage My Jobs</h2>
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-blue-950 text-white py-10 px-4">
+      <div className="max-w-5xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-4xl font-bold">Manage My Jobs</h2>
+          <button
+            onClick={handleCreate}
+            className="bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-md shadow-md transition"
+          >
+            + Post Job
+          </button>
+        </div>
 
-      <button onClick={handleCreate} title="Add New Job">
-        + Post Job
-      </button>
+        {jobs.length === 0 ? (
+          <p className="text-gray-300 text-center">You haven't posted any jobs yet.</p>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6">
+            {jobs.map(job => (
+              <div
+                key={job._id}
+                className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 border border-blue-700 p-6 rounded-lg shadow-lg hover:shadow-xl transition"
+              >
+                <h3 className="text-2xl font-semibold text-white mb-2">{job.title}</h3>
+                <p className="text-gray-300"><span className="font-semibold">Description:</span> {job.description}</p>
+                <p className="text-gray-300"><span className="font-semibold">Location:</span> {job.location}</p>
+                <p className="text-gray-300"><span className="font-semibold">Type:</span> {job.type}</p>
+                <p className="text-gray-300"><span className="font-semibold">Salary:</span> {job.salaryRange}</p>
 
-      {jobs.length === 0 ? (
-        <p>You haven't posted any jobs yet.</p>
-      ) : (
-        jobs.map(job => (
-          <div key={job._id}>
-            <h3>{job.title}</h3>
-            <p><strong>Description:</strong> {job.description}</p>
-            <p><strong>Location:</strong> {job.location}</p>
-            <p><strong>Type:</strong> {job.type}</p>
-            <p><strong>Salary:</strong> {job.salaryRange}</p>
-
-            <button onClick={() => handleEdit(job)}>Edit</button>
-            <button onClick={() => handleDelete(job._id)}>Delete</button>
+                <div className="mt-4 flex space-x-4">
+                  <button
+                    onClick={() => handleEdit(job)}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium px-4 py-2 rounded shadow-sm transition"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(job._id)}
+                    className="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded shadow-sm transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))
-      )}
+        )}
 
-      {showForm && (
-        <JobForm
-          initialData={editingJob}
-          onClose={handleFormClose}
-          onSuccess={handleFormSuccess}
-        />
-      )}
+        {showForm && (
+          <div className="mt-10">
+            <JobForm
+              initialData={editingJob}
+              onClose={handleFormClose}
+              onSuccess={handleFormSuccess}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
